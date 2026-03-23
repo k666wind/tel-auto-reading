@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Private Repo File Reader</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📁 Private Repo Reader</h1>
+      <p class="subtitle">Browse files from your private repository</p>
+    </header>
+
+    <div class="config-panel">
+      <label for="tokenInput">GitHub Personal Access Token (PAT)</label>
+      <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+      <small>Token is stored only in your browser's sessionStorage — never sent to any server except GitHub's API.</small>
+
+      <div class="row">
+        <div>
+          <label for="ownerInput">Owner / Username</label>
+          <input type="text" id="ownerInput" placeholder="your-github-username" />
+        </div>
+        <div>
+          <label for="repoInput">Private Repo Name</label>
+          <input type="text" id="repoInput" placeholder="my-private-repo" />
+        </div>
+        <div>
+          <label for="branchInput">Branch</label>
+          <input type="text" id="branchInput" placeholder="main" value="main" />
+        </div>
+      </div>
+
+      <button id="loadBtn" onclick="loadRepo()">Load Repository</button>
+    </div>
+
+    <div class="content" id="content" style="display:none">
+      <div class="breadcrumb" id="breadcrumb"></div>
+      <div class="file-list" id="fileList"></div>
+      <div class="file-viewer" id="fileViewer" style="display:none">
+        <div class="viewer-header">
+          <span id="viewerTitle"></span>
+          <button onclick="closeViewer()">✕ Close</button>
+        </div>
+        <pre id="viewerContent"></pre>
+      </div>
+    </div>
+
+    <div id="error" class="error" style="display:none"></div>
+    <div id="loading" class="loading" style="display:none">Loading...</div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
