@@ -445,7 +445,7 @@
 
 <main id="app">
   <!-- Setup shown if no config -->
-  <div class="setup-card" id="setupCard">
+  <div class="setup-card" id="setupCard" style="display:none">
     <h2>Connect to tel-auto</h2>
     <p>Enter your GitHub credentials to start reading logs from your private repository.</p>
     <div class="field-label">GitHub Username</div>
@@ -587,13 +587,13 @@ let state = {
 //  BOOT
 // ══════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  // Placeholders mean the Actions workflow hasn't injected secrets yet
-  if (CONFIG.token && CONFIG.token !== '__GH_TOKEN__') {
-    document.getElementById('setupCard').style.display = 'none';
-    document.getElementById('viewer').style.display = 'block';
+  if (CONFIG.token === '__GH_TOKEN__' || !CONFIG.token) {
+    // Secrets not injected — show login as fallback
+    document.getElementById('setupCard').style.display = 'block';
+  } else {
+    // Secrets injected by Actions — go straight to viewer
     loadFileList();
   }
-  // else: login card stays visible as fallback
 });
 
 function saveConfig() {
