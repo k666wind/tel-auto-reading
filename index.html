@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AutoLogReader</title>
+  <meta name="description" content="Tel-Auto log viewer"/>
+  <meta name="theme-color" content="#f5e6f0"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="AutoLogReader"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --rose:    #f5e6f0;
+      --peach:   #fdf0e8;
+      --mint:    #e8f5f0;
+      --sky:     #e8f0f5;
+      --lavender:#ede8f5;
+      --butter:  #f5f3e8;
+
+      --rose-mid:    #e8c5d8;
+      --peach-mid:   #f5d5b8;
+      --mint-mid:    #b8e0d0;
+      --sky-mid:     #b8d0e8;
+      --lavender-mid:#c8b8e8;
+      --butter-mid:  #e0d8a8;
+
+      --rose-deep:    #c0608c;
+      --peach-deep:   #c07840;
+      --mint-deep:    #3a9070;
+      --sky-deep:     #4070a0;
+      --lavender-deep:#6048a0;
+      --red-alert:    #f8d8d8;
+      --red-alert-border: #e89090;
+      --red-alert-text:   #a03030;
+      --green-alert:  #d8f0e0;
+      --green-alert-border: #80c890;
+      --green-alert-text:   #287048;
+
+      --text:      #3a3040;
+      --text-muted:#7a7088;
+      --text-light:#a898b8;
+      --surface:   #fffcfe;
+      --border:    rgba(160,130,180,0.18);
+      --shadow:    rgba(180,140,200,0.13);
+      --radius:    14px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: linear-gradient(135deg, var(--rose) 0%, var(--lavender) 40%, var(--sky) 100%);
+      min-height: 100vh;
+      color: var(--text);
+      padding-bottom: 2rem;
+    }
+
+    /* ── Header ── */
+    header {
+      background: rgba(255,252,254,0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.25rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+
+    .app-title {
+      font-family: 'Lora', serif;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: var(--lavender-deep);
+      letter-spacing: -0.01em;
+    }
+
+    .app-title span {
+      font-style: italic;
+      color: var(--rose-deep);
+    }
+
+    .header-status {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--mint-mid);
+    }
+    .dot.loading { background: var(--butter-mid); animation: pulse 1s infinite; }
+    .dot.error   { background: var(--red-alert-border); }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 0;
+    }
+
+    /* ── Setup card ── */
+    .setup-card {
+      background: rgba(255,252,254,0.88);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      max-width: 480px;
+      margin: 3rem auto;
+      box-shadow: 0 4px 32px var(--shadow);
+      animation: fadeUp 0.4s ease;
+    }
+
+    .setup-card h2 {
+      font-family: 'Lora', serif;
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: var(--lavender-deep);
+      margin-bottom: 0.4rem;
+    }
+
+    .setup-card p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .field-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.35rem;
+    }
+
+    input[type=text], input[type=password] {
+      width: 100%;
+      background: var(--lavender);
+      border: 1.5px solid transparent;
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 0.6rem 0.9rem;
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 1rem;
+    }
+
+    input[type=text]:focus, input[type=password]:focus {
+      border-color: var(--lavender-deep);
+      background: white;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--lavender-deep), var(--rose-deep));
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1.5rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-primary:hover  { opacity: 0.88; }
+    .btn-primary:active { transform: scale(0.98); }
+
+    /* ── File tabs ── */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 0.45rem 1rem;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: rgba(255,252,254,0.7);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab:hover { background: rgba(255,252,254,0.95); color: var(--text); }
+
+    .tab.active {
+      background: white;
+      border-color: var(--lavender-deep);
+      color: var(--lavender-deep);
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+
+    .tab .tab-count {
+      display: inline-block;
+      background: var(--lavender);
+      color: var(--lavender-deep);
+      border-radius: 10px;
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      margin-left: 4px;
+    }
+
+    .tab.active .tab-count {
+      background: var(--lavender-deep);
+      color: white;
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-info {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      flex: 1;
+    }
+
+    .toolbar-info strong { color: var(--text); }
+
+    .page-size-select {
+      background: rgba(255,252,254,0.9);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 0.35rem 0.6rem;
+      font-size: 0.78rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .btn-icon {
+      background: rgba(255,252,254,0.9);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      padding: 0.35rem 0.7rem;
+      font-size: 0.78rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-icon:hover { background: white; color: var(--text); border-color: var(--lavender-mid); }
+
+    /* ── Log cards ── */
+    .log-table-wrap {
+      background: rgba(255,252,254,0.82);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 2px 20px var(--shadow);
+      animation: fadeUp 0.3s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(10px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    thead tr {
+      background: rgba(237,232,245,0.55);
+    }
+
+    th {
+      padding: 0.7rem 0.9rem;
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid rgba(200,180,220,0.12);
+      color: var(--text);
+      vertical-align: middle;
+      line-height: 1.4;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tbody tr { transition: background 0.15s; }
+    tbody tr:hover { background: rgba(237,232,245,0.3); }
+
+    .td-datetime {
+      white-space: nowrap;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      min-width: 140px;
+    }
+
+    .td-date { display: block; color: var(--text); font-weight: 500; }
+    .td-time { display: block; color: var(--text-light); font-size: 0.7rem; }
+
+    .td-url {
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.74rem;
+      color: var(--sky-deep);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 10px;
+      font-size: 0.68rem;
+      font-weight: 500;
+      padding: 2px 8px;
+      white-space: nowrap;
+    }
+
+    .badge-matched   { background: var(--green-alert); color: var(--green-alert-text); }
+    .badge-notmatched{ background: var(--red-alert);   color: var(--red-alert-text); }
+    .badge-site      { background: var(--lavender);    color: var(--lavender-deep); }
+    .badge-error     { background: #f8e8d8; color: #906030; }
+
+    .price-val { font-family: 'DM Sans', monospace; font-weight: 500; }
+    .price-target { color: var(--text-muted); font-size: 0.75rem; }
+
+    /* Row highlight: fetched < target = deal! */
+    tr.row-deal td { background: rgba(216,240,224,0.45); }
+    tr.row-deal:hover td { background: rgba(216,240,224,0.65); }
+    tr.row-deal .price-val { color: var(--green-alert-text); }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .pg-btn {
+      min-width: 34px; height: 34px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: rgba(255,252,254,0.9);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .pg-btn:hover { background: white; color: var(--text); border-color: var(--lavender-mid); }
+    .pg-btn.active { background: var(--lavender-deep); color: white; border-color: var(--lavender-deep); }
+    .pg-btn:disabled { opacity: 0.35; cursor: default; }
+
+    /* ── Empty / error states ── */
+    .state-msg {
+      padding: 3rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .state-msg .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .state-msg p { font-size: 0.85rem; line-height: 1.6; }
+
+    .error-banner {
+      background: var(--red-alert);
+      border: 1px solid var(--red-alert-border);
+      color: var(--red-alert-text);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1rem;
+      font-size: 0.82rem;
+      margin-bottom: 1rem;
+    }
+
+    .skeleton td {
+      background: linear-gradient(90deg, rgba(200,180,220,0.12) 25%, rgba(200,180,220,0.22) 50%, rgba(200,180,220,0.12) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      color: transparent;
+    }
+
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .td-url { max-width: 140px; }
+      th, td { padding: 0.5rem 0.6rem; }
+      .toolbar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="app-title">AutoLog<span>Reader</span></div>
+  <div class="header-status">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">ready</span>
+  </div>
+</header>
+
+<main id="app">
+  <!-- Setup shown if no config -->
+  <div class="setup-card" id="setupCard">
+    <h2>Connect to tel-auto</h2>
+    <p>Enter your GitHub credentials to start reading logs from your private repository.</p>
+    <div class="field-label">GitHub Username</div>
+    <input type="text" id="cfgOwner" placeholder="your-username"/>
+    <div class="field-label">Personal Access Token</div>
+    <input type="password" id="cfgToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+    <button class="btn-primary" onclick="saveConfig()">Connect →</button>
+  </div>
+
+  <!-- Log viewer (hidden until connected) -->
+  <div id="viewer" style="display:none">
+    <div id="errorBanner" class="error-banner" style="display:none"></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="toolbar">
+      <div class="toolbar-info" id="toolbarInfo"></div>
+      <button class="btn-icon" onclick="refreshCurrent()">↺ Refresh</button>
+      <select class="page-size-select" id="pageSizeSelect" onchange="onPageSizeChange()">
+        <option value="20" selected>20 / page</option>
+        <option value="50">50 / page</option>
+        <option value="100">100 / page</option>
+        <option value="999999">All</option>
+      </select>
+    </div>
+    <div class="log-table-wrap" id="tableWrap"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</main>
+
+<script>
+// ══════════════════════════════════════════════
+//  CONFIG — edit these two values
+// ══════════════════════════════════════════════
+const CONFIG = {
+  owner:  'YOUR_GITHUB_USERNAME',   // ← replace
+  repo:   'tel-auto',
+  branch: 'main',
+  token:  'YOUR_PAT_TOKEN',         // ← replace (ghp_...)
+};
+
+// ══════════════════════════════════════════════
+//  FILE PARSERS
+//  To add a new log file: add an entry to FILE_PARSERS
+//  with a parse() fn and columns[] definition.
+// ══════════════════════════════════════════════
+const FILE_PARSERS = {
+
+  'cardyard_debug.log': {
+    label: '🃏 Cardyard',
+    color: 'rose',
+    parse(raw) {
+      return raw.trim().split('\n').reverse().map((line, i) => {
+        // [2026-03-22 19:09:40] tesco: found 0 cards
+        const m = line.match(/^\[(.+?)\]\s+(\S+?):\s+(.+)$/);
+        if (!m) return null;
+        return { id: i, datetime: m[1], site: m[2].replace(':',''), desc: m[3] };
+      }).filter(Boolean);
+    },
+    columns: [
+      { key: 'datetime', label: 'Date / Time', render: r => dtCell(r.datetime) },
+      { key: 'site',     label: 'Site',        render: r => `<span class="badge badge-site">${esc(r.site)}</span>` },
+      { key: 'desc',     label: 'Result',      render: r => {
+        const isError = r.desc.toLowerCase().includes('not loaded') || r.desc.toLowerCase().includes('error');
+        return isError
+          ? `<span class="badge badge-error">${esc(r.desc)}</span>`
+          : esc(r.desc);
+      }},
+    ],
+    rowClass: () => '',
+  },
+
+  'keyword_debug.log': {
+    label: '🔍 Keywords',
+    color: 'sky',
+    parse(raw) {
+      return raw.trim().split('\n').reverse().map((line, i) => {
+        // [datetime] url: keyword MATCHED/NOT matched -> word
+        const m = line.match(/^\[(.+?)\]\s+(https?:\/\/\S+):\s+keyword\s+(MATCHED|NOT matched)\s+->\s+(.+)$/i);
+        if (!m) return null;
+        return { id: i, datetime: m[1], url: m[2], status: m[3].toUpperCase(), keyword: m[4].trim() };
+      }).filter(Boolean);
+    },
+    columns: [
+      { key: 'datetime', label: 'Date / Time', render: r => dtCell(r.datetime) },
+      { key: 'url',      label: 'URL',         render: r => `<span class="td-url" title="${esc(r.url)}">${esc(shortUrl(r.url))}</span>` },
+      { key: 'keyword',  label: 'Keyword',     render: r => `<strong>${esc(r.keyword)}</strong>` },
+      { key: 'status',   label: 'Status',      render: r => r.status === 'MATCHED'
+          ? `<span class="badge badge-matched">✓ Matched</span>`
+          : `<span class="badge badge-notmatched">✗ Not matched</span>` },
+    ],
+    rowClass: () => '',
+  },
+
+  'price_debug.log': {
+    label: '💰 Prices',
+    color: 'mint',
+    parse(raw) {
+      return raw.trim().split('\n').reverse().map((line, i) => {
+        // [datetime] url: fetched price=X, last=Y, target=Z
+        const m = line.match(/^\[(.+?)\]\s+(https?:\/\/\S+):\s+fetched price=([\d.]+),\s*last=([\d.]+),\s*target=([\d.]+)/);
+        if (!m) return null;
+        return {
+          id: i,
+          datetime: m[1],
+          url: m[2],
+          fetched: parseFloat(m[3]),
+          last:    parseFloat(m[4]),
+          target:  parseFloat(m[5]),
+        };
+      }).filter(Boolean);
+    },
+    columns: [
+      { key: 'datetime', label: 'Date / Time', render: r => dtCell(r.datetime) },
+      { key: 'url',      label: 'Item',        render: r => `<span class="td-url" title="${esc(r.url)}">${esc(productName(r.url))}</span>` },
+      { key: 'fetched',  label: 'Fetched',     render: r => `<span class="price-val">£${r.fetched.toFixed(2)}</span>` },
+      { key: 'target',   label: 'Target',      render: r => `<span class="price-target">£${r.target.toFixed(2)}</span>` },
+      { key: 'diff',     label: 'vs Target',   render: r => {
+        const diff = r.fetched - r.target;
+        const sign = diff >= 0 ? '+' : '';
+        const cls  = diff < 0 ? 'color:var(--green-alert-text)' : 'color:var(--text-muted)';
+        return `<span style="${cls};font-weight:500">${sign}£${Math.abs(diff).toFixed(2)}</span>`;
+      }},
+    ],
+    rowClass: r => r.fetched < r.target ? 'row-deal' : '',
+  },
+};
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let state = {
+  files:       [],   // [{name, sha}]
+  activeFile:  null,
+  rows:        [],   // parsed rows for active file
+  page:        1,
+  pageSize:    20,
+};
+
+// ══════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  // If config is already filled (hardcoded), skip setup card
+  if (CONFIG.token && CONFIG.token !== 'YOUR_PAT_TOKEN' && CONFIG.owner !== 'YOUR_GITHUB_USERNAME') {
+    document.getElementById('setupCard').style.display = 'none';
+    document.getElementById('viewer').style.display = 'block';
+    loadFileList();
+  } else {
+    // Show setup card with pre-filled owner
+    document.getElementById('cfgOwner').value = CONFIG.owner !== 'YOUR_GITHUB_USERNAME' ? CONFIG.owner : '';
+  }
+});
+
+function saveConfig() {
+  const o = document.getElementById('cfgOwner').value.trim();
+  const t = document.getElementById('cfgToken').value.trim();
+  if (!o || !t) { alert('Please fill in both fields.'); return; }
+  CONFIG.owner = o;
+  CONFIG.token = t;
+  document.getElementById('setupCard').style.display = 'none';
+  document.getElementById('viewer').style.display = 'block';
+  loadFileList();
+}
+
+// ══════════════════════════════════════════════
+//  GITHUB API
+// ══════════════════════════════════════════════
+async function ghFetch(endpoint) {
+  const res = await fetch(`https://api.github.com${endpoint}`, {
+    headers: {
+      'Authorization': `token ${CONFIG.token}`,
+      'Accept': 'application/vnd.github.v3+json',
+    }
+  });
+  if (!res.ok) {
+    const b = await res.json().catch(() => ({}));
+    throw new Error(`GitHub API ${res.status}: ${b.message || res.statusText}`);
+  }
+  return res.json();
+}
+
+async function loadFileList() {
+  setStatus('loading', 'loading…');
+  hideError();
+  try {
+    const items = await ghFetch(`/repos/${CONFIG.owner}/${CONFIG.repo}/contents/?ref=${CONFIG.branch}`);
+    // Keep only .log files that have a known parser
+    state.files = items
+      .filter(f => f.type === 'file' && FILE_PARSERS[f.name])
+      .map(f => ({ name: f.name, sha: f.sha }));
+
+    if (state.files.length === 0) {
+      showError('No recognised log files found in the repo root.');
+      setStatus('error', 'no files');
+      return;
+    }
+
+    renderTabs();
+    selectFile(state.files[0].name);
+    setStatus('ok', `${state.files.length} files`);
+  } catch (err) {
+    showError(err.message);
+    setStatus('error', 'error');
+  }
+}
+
+async function loadFile(name) {
+  setStatus('loading', 'loading…');
+  hideError();
+  renderSkeleton();
+  try {
+    const data = await ghFetch(`/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${name}?ref=${CONFIG.branch}`);
+    const raw = atob(data.content.replace(/\n/g, ''));
+    const parser = FILE_PARSERS[name];
+    state.rows = parser.parse(raw);
+    state.page = 1;
+    renderTable();
+    setStatus('ok', 'loaded');
+  } catch (err) {
+    showError(err.message);
+    setStatus('error', 'error');
+    document.getElementById('tableWrap').innerHTML = `
+      <div class="state-msg">
+        <div class="icon">⚠️</div>
+        <p>${esc(err.message)}</p>
+      </div>`;
+  }
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+function renderTabs() {
+  const el = document.getElementById('tabs');
+  el.innerHTML = state.files.map(f => {
+    const parser = FILE_PARSERS[f.name];
+    return `<button class="tab" id="tab-${f.name}" onclick="selectFile('${f.name}')">${parser.label}</button>`;
+  }).join('');
+}
+
+function selectFile(name) {
+  state.activeFile = name;
+  // Update tab active states
+  state.files.forEach(f => {
+    const el = document.getElementById(`tab-${f.name}`);
+    if (el) el.classList.toggle('active', f.name === name);
+  });
+  loadFile(name);
+}
+
+function renderTable() {
+  const parser = FILE_PARSERS[state.activeFile];
+  const rows   = state.rows;
+  const total  = rows.length;
+  const ps     = state.pageSize;
+  const page   = state.page;
+  const start  = (page - 1) * ps;
+  const end    = Math.min(start + ps, total);
+  const slice  = rows.slice(start, end);
+
+  // Update tab count
+  const tabEl = document.getElementById(`tab-${state.activeFile}`);
+  if (tabEl) {
+    tabEl.innerHTML = `${parser.label} <span class="tab-count">${total}</span>`;
+  }
+
+  // Toolbar info
+  document.getElementById('toolbarInfo').innerHTML =
+    `Showing <strong>${start+1}–${end}</strong> of <strong>${total}</strong> entries`;
+
+  // Table
+  const thead = parser.columns.map(c => `<th>${c.label}</th>`).join('');
+  const tbody = slice.length === 0
+    ? `<tr><td colspan="${parser.columns.length}"><div class="state-msg"><div class="icon">📭</div><p>No entries found.</p></div></td></tr>`
+    : slice.map(r => {
+        const cls = parser.rowClass(r);
+        const cells = parser.columns.map(c => `<td>${c.render(r)}</td>`).join('');
+        return `<tr class="${cls}">${cells}</tr>`;
+      }).join('');
+
+  document.getElementById('tableWrap').innerHTML = `
+    <table>
+      <thead><tr>${thead}</tr></thead>
+      <tbody>${tbody}</tbody>
+    </table>`;
+
+  renderPagination(total, ps, page);
+}
+
+function renderPagination(total, ps, current) {
+  const pages = Math.ceil(total / ps);
+  if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+
+  let html = `<button class="pg-btn" onclick="goPage(${current-1})" ${current===1?'disabled':''}>‹</button>`;
+
+  const range = pageRange(current, pages);
+  let prev = null;
+  range.forEach(p => {
+    if (prev !== null && p - prev > 1) html += `<span class="pg-btn" style="border:none;cursor:default">…</span>`;
+    html += `<button class="pg-btn ${p===current?'active':''}" onclick="goPage(${p})">${p}</button>`;
+    prev = p;
+  });
+
+  html += `<button class="pg-btn" onclick="goPage(${current+1})" ${current===pages?'disabled':''}>›</button>`;
+  document.getElementById('pagination').innerHTML = html;
+}
+
+function pageRange(current, total) {
+  const delta = 2;
+  const range = new Set([1, total]);
+  for (let i = Math.max(2, current-delta); i <= Math.min(total-1, current+delta); i++) range.add(i);
+  return Array.from(range).sort((a,b) => a-b);
+}
+
+function renderSkeleton() {
+  const parser = FILE_PARSERS[state.activeFile];
+  if (!parser) return;
+  const thead = parser.columns.map(c => `<th>${c.label}</th>`).join('');
+  const rows  = Array(8).fill(0).map(() =>
+    `<tr class="skeleton">${parser.columns.map(() => '<td>████████</td>').join('')}</tr>`
+  ).join('');
+  document.getElementById('tableWrap').innerHTML = `
+    <table><thead><tr>${thead}</tr></thead><tbody>${rows}</tbody></table>`;
+  document.getElementById('pagination').innerHTML = '';
+}
+
+// ══════════════════════════════════════════════
+//  EVENTS
+// ══════════════════════════════════════════════
+function goPage(p) {
+  const pages = Math.ceil(state.rows.length / state.pageSize);
+  if (p < 1 || p > pages) return;
+  state.page = p;
+  renderTable();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function onPageSizeChange() {
+  state.pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+  state.page = 1;
+  renderTable();
+}
+
+function refreshCurrent() {
+  if (state.activeFile) loadFile(state.activeFile);
+}
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function dtCell(dt) {
+  const [date, time] = dt.split(' ');
+  return `<span class="td-datetime"><span class="td-date">${esc(date)}</span><span class="td-time">${esc(time||'')}</span></span>`;
+}
+
+function shortUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname.replace('www.','') + u.pathname.slice(0,40);
+  } catch { return url.slice(0,50); }
+}
+
+function productName(url) {
+  // Extract readable product name from IKEA-style URLs
+  try {
+    const u = new URL(url);
+    const parts = u.pathname.split('/').filter(Boolean);
+    const slug = parts[parts.length - 1] || parts[parts.length - 2] || '';
+    // Remove product ID suffix (e.g. -90624640)
+    return slug.replace(/-[a-z0-9]{8,}$/, '').replace(/-/g, ' ') || shortUrl(url);
+  } catch { return shortUrl(url); }
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function setStatus(type, text) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'dot' + (type === 'loading' ? ' loading' : type === 'error' ? ' error' : '');
+  document.getElementById('statusText').textContent = text;
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBanner');
+  el.textContent = '⚠️ ' + msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('errorBanner').style.display = 'none';
+}
+</script>
+
+<!-- PWA Service Worker registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
