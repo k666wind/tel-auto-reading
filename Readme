@@ -1,0 +1,81 @@
+# AutoLogReader PWA
+
+A soft-pastel Progressive Web App that reads log files from the private `tel-auto` repo via GitHub API.
+
+## Quick Setup
+
+### 1. Edit `index.html` — fill in your credentials
+
+Open `index.html` and find the `CONFIG` block near the top of the `<script>` section:
+
+```js
+const CONFIG = {
+  owner:  'YOUR_GITHUB_USERNAME',   // ← your GitHub username
+  repo:   'tel-auto',
+  branch: 'main',
+  token:  'YOUR_PAT_TOKEN',         // ← your ghp_... token
+};
+```
+
+Replace both values and save.
+
+### 2. Push to a public GitHub repo
+
+```bash
+git init
+git add .
+git commit -m "initial"
+git remote add origin https://github.com/YOUR_USERNAME/tel-monitor.git
+git push -u origin main
+```
+
+### 3. Enable GitHub Pages
+
+Go to **Settings → Pages** → Source: `main` branch, `/(root)` folder.
+
+Your app will be live at `https://YOUR_USERNAME.github.io/tel-monitor/`
+
+---
+
+## Adding New Log Files
+
+To support a new `.log` file, add one entry to the `FILE_PARSERS` object in `index.html`:
+
+```js
+'newfile_debug.log': {
+  label: '📄 New File',   // tab label
+  color: 'mint',          // rose | sky | mint | lavender
+  parse(raw) {
+    return raw.trim().split('\n').reverse().map((line, i) => {
+      const m = line.match(/your regex here/);
+      if (!m) return null;
+      return { id: i, datetime: m[1], field1: m[2], field2: m[3] };
+    }).filter(Boolean);
+  },
+  columns: [
+    { key: 'datetime', label: 'Date / Time', render: r => dtCell(r.datetime) },
+    { key: 'field1',   label: 'Field 1',     render: r => esc(r.field1) },
+    { key: 'field2',   label: 'Field 2',     render: r => esc(r.field2) },
+  ],
+  rowClass: () => '',   // return a CSS class string based on row data, or ''
+},
+```
+
+That's it — the app auto-discovers files in the repo root and shows tabs only for files it has a parser for.
+
+---
+
+## PWA Icons
+
+The `manifest.json` references `icon-192.png` and `icon-512.png`. Add square PNG icons to the repo root for best install experience. Without them the PWA still works but uses the browser default icon.
+
+---
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `index.html` | Entire app — UI, parsers, GitHub API logic |
+| `manifest.json` | PWA metadata (name, icons, theme) |
+| `sw.js` | Service worker — caches app shell for offline use |
+| `README.md` | This file |
