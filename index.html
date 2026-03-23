@@ -74,6 +74,7 @@
       align-items: center;
       justify-content: space-between;
       height: 56px;
+      gap: 1rem;
     }
 
     .app-title {
@@ -82,12 +83,54 @@
       font-weight: 500;
       color: var(--lavender-deep);
       letter-spacing: -0.01em;
+      white-space: nowrap;
     }
 
-    .app-title span {
-      font-style: italic;
-      color: var(--rose-deep);
+    .app-title span { font-style: italic; color: var(--rose-deep); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+      justify-content: flex-end;
     }
+
+    /* ── Global search ── */
+    .global-search-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 320px;
+    }
+
+    .global-search-wrap svg {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    #globalSearch {
+      width: 100%;
+      background: rgba(237,232,245,0.6);
+      border: 1.5px solid transparent;
+      border-radius: 20px;
+      color: var(--text);
+      padding: 0.38rem 0.75rem 0.38rem 2rem;
+      font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    #globalSearch:focus {
+      border-color: var(--lavender-deep);
+      background: white;
+    }
+
+    #globalSearch::placeholder { color: var(--text-light); }
 
     .header-status {
       font-size: 0.72rem;
@@ -95,6 +138,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      white-space: nowrap;
     }
 
     .dot {
@@ -192,6 +236,7 @@
       gap: 0.5rem;
       margin-bottom: 1rem;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .tab {
@@ -231,6 +276,24 @@
       color: white;
     }
 
+    .tab .tab-errors {
+      display: inline-block;
+      background: var(--red-alert);
+      color: var(--red-alert-text);
+      border-radius: 10px;
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      margin-left: 3px;
+    }
+
+    /* ── Last updated ── */
+    .last-updated {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
     /* ── Toolbar ── */
     .toolbar {
       display: flex;
@@ -247,6 +310,11 @@
     }
 
     .toolbar-info strong { color: var(--text); }
+
+    .toolbar-info .filter-active {
+      color: var(--lavender-deep);
+      font-weight: 500;
+    }
 
     .page-size-select {
       background: rgba(255,252,254,0.9);
@@ -273,11 +341,13 @@
       display: flex;
       align-items: center;
       gap: 4px;
+      white-space: nowrap;
     }
 
     .btn-icon:hover { background: white; color: var(--text); border-color: var(--lavender-mid); }
+    .btn-icon.active { background: var(--lavender); border-color: var(--lavender-deep); color: var(--lavender-deep); }
 
-    /* ── Log cards ── */
+    /* ── Log table ── */
     .log-table-wrap {
       background: rgba(255,252,254,0.82);
       border: 1px solid var(--border);
@@ -298,8 +368,13 @@
       font-size: 0.82rem;
     }
 
-    thead tr {
+    thead tr.col-headers {
       background: rgba(237,232,245,0.55);
+    }
+
+    thead tr.col-filters {
+      background: rgba(237,232,245,0.3);
+      border-bottom: 1px solid var(--border);
     }
 
     th {
@@ -314,6 +389,29 @@
       white-space: nowrap;
     }
 
+    /* ── Per-column filter inputs ── */
+    .col-filter-cell {
+      padding: 0.35rem 0.5rem;
+    }
+
+    .col-filter-input {
+      width: 100%;
+      background: rgba(255,252,254,0.8);
+      border: 1.5px solid transparent;
+      border-radius: 6px;
+      color: var(--text);
+      padding: 0.28rem 0.5rem;
+      font-size: 0.74rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+      min-width: 60px;
+    }
+
+    .col-filter-input:focus { border-color: var(--lavender-mid); background: white; }
+    .col-filter-input::placeholder { color: var(--text-light); font-size: 0.7rem; }
+    .col-filter-input.has-value { border-color: var(--lavender-deep); background: var(--lavender); }
+
     td {
       padding: 0.6rem 0.9rem;
       border-bottom: 1px solid rgba(200,180,220,0.12);
@@ -323,9 +421,9 @@
     }
 
     tr:last-child td { border-bottom: none; }
-
-    tbody tr { transition: background 0.15s; }
+    tbody tr { transition: background 0.15s; cursor: pointer; }
     tbody tr:hover { background: rgba(237,232,245,0.3); }
+    tbody tr.expanded { background: rgba(237,232,245,0.25); }
 
     .td-datetime {
       white-space: nowrap;
@@ -356,18 +454,45 @@
       white-space: nowrap;
     }
 
-    .badge-matched   { background: var(--green-alert); color: var(--green-alert-text); }
-    .badge-notmatched{ background: var(--red-alert);   color: var(--red-alert-text); }
-    .badge-site      { background: var(--lavender);    color: var(--lavender-deep); }
-    .badge-error     { background: #f8e8d8; color: #906030; }
+    .badge-matched    { background: var(--green-alert); color: var(--green-alert-text); }
+    .badge-notmatched { background: var(--red-alert);   color: var(--red-alert-text); }
+    .badge-site       { background: var(--lavender);    color: var(--lavender-deep); }
+    .badge-error      { background: #f8e8d8; color: #906030; }
 
-    .price-val { font-family: 'DM Sans', monospace; font-weight: 500; }
+    .price-val    { font-family: 'DM Sans', monospace; font-weight: 500; }
     .price-target { color: var(--text-muted); font-size: 0.75rem; }
 
-    /* Row highlight: fetched < target = deal! */
     tr.row-deal td { background: rgba(216,240,224,0.45); }
     tr.row-deal:hover td { background: rgba(216,240,224,0.65); }
     tr.row-deal .price-val { color: var(--green-alert-text); }
+
+    /* ── Expand row ── */
+    tr.expand-row td {
+      padding: 0;
+      border-bottom: 1px solid var(--border);
+      cursor: default;
+    }
+
+    .expand-content {
+      background: rgba(237,232,245,0.18);
+      padding: 0.9rem 1.2rem;
+      font-size: 0.8rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.5rem 1.5rem;
+    }
+
+    .expand-field { display: flex; flex-direction: column; gap: 2px; }
+    .expand-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light); }
+    .expand-value { color: var(--text); word-break: break-all; }
+
+    /* ── Highlight matched text ── */
+    mark {
+      background: rgba(96,72,160,0.18);
+      color: var(--lavender-deep);
+      border-radius: 2px;
+      padding: 0 1px;
+    }
 
     /* ── Pagination ── */
     .pagination {
@@ -396,7 +521,7 @@
     .pg-btn.active { background: var(--lavender-deep); color: white; border-color: var(--lavender-deep); }
     .pg-btn:disabled { opacity: 0.35; cursor: default; }
 
-    /* ── Empty / error states ── */
+    /* ── Empty / error / states ── */
     .state-msg {
       padding: 3rem 1.5rem;
       text-align: center;
@@ -416,6 +541,13 @@
       margin-bottom: 1rem;
     }
 
+    /* ── Auto-refresh countdown ── */
+    .refresh-countdown {
+      font-size: 0.7rem;
+      color: var(--text-light);
+      white-space: nowrap;
+    }
+
     .skeleton td {
       background: linear-gradient(90deg, rgba(200,180,220,0.12) 25%, rgba(200,180,220,0.22) 50%, rgba(200,180,220,0.12) 75%);
       background-size: 200% 100%;
@@ -425,11 +557,12 @@
 
     @keyframes shimmer { to { background-position: -200% 0; } }
 
-    /* ── Responsive ── */
     @media (max-width: 640px) {
       .td-url { max-width: 140px; }
       th, td { padding: 0.5rem 0.6rem; }
       .toolbar { flex-direction: column; align-items: flex-start; }
+      .global-search-wrap { max-width: 100%; }
+      .header-right { flex-wrap: wrap; }
     }
   </style>
 </head>
@@ -437,14 +570,20 @@
 
 <header>
   <div class="app-title">AutoLog<span>Reader</span></div>
-  <div class="header-status">
-    <div class="dot" id="statusDot"></div>
-    <span id="statusText">ready</span>
+  <div class="header-right">
+    <div class="global-search-wrap">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="var(--text)"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+      <input type="text" id="globalSearch" placeholder="Search all columns…" oninput="onGlobalSearch()" autocomplete="off"/>
+    </div>
+    <div class="header-status">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">ready</span>
+    </div>
   </div>
 </header>
 
 <main id="app">
-  <!-- Setup shown if no config -->
+  <!-- Setup card (fallback if secrets not injected) -->
   <div class="setup-card" id="setupCard" style="display:none">
     <h2>Connect to tel-auto</h2>
     <p>Enter your GitHub credentials to start reading logs from your private repository.</p>
@@ -455,12 +594,18 @@
     <button class="btn-primary" onclick="saveConfig()">Connect →</button>
   </div>
 
-  <!-- Log viewer (hidden until connected) -->
+  <!-- Log viewer -->
   <div id="viewer" style="display:none">
     <div id="errorBanner" class="error-banner" style="display:none"></div>
-    <div class="tabs" id="tabs"></div>
+
+    <div class="tabs" id="tabs">
+      <span class="last-updated" id="lastUpdated"></span>
+    </div>
+
     <div class="toolbar">
       <div class="toolbar-info" id="toolbarInfo"></div>
+      <span class="refresh-countdown" id="refreshCountdown"></span>
+      <button class="btn-icon" id="exportBtn" onclick="exportCSV()" title="Export filtered view as CSV">↓ CSV</button>
       <button class="btn-icon" onclick="refreshCurrent()">↺ Refresh</button>
       <select class="page-size-select" id="pageSizeSelect" onchange="onPageSizeChange()">
         <option value="20" selected>20 / page</option>
@@ -469,6 +614,7 @@
         <option value="999999">All</option>
       </select>
     </div>
+
     <div class="log-table-wrap" id="tableWrap"></div>
     <div class="pagination" id="pagination"></div>
   </div>
@@ -476,7 +622,7 @@
 
 <script>
 // ══════════════════════════════════════════════
-//  CONFIG — edit these two values
+//  CONFIG
 // ══════════════════════════════════════════════
 const CONFIG = {
   owner:  '__GH_OWNER__',
@@ -485,10 +631,11 @@ const CONFIG = {
   token:  '__GH_TOKEN__',
 };
 
+const AUTO_REFRESH_MS = 10 * 60 * 1000; // 10 minutes
+
 // ══════════════════════════════════════════════
 //  FILE PARSERS
-//  To add a new log file: add an entry to FILE_PARSERS
-//  with a parse() fn and columns[] definition.
+//  Add new log files here — one entry per file.
 // ══════════════════════════════════════════════
 const FILE_PARSERS = {
 
@@ -497,23 +644,27 @@ const FILE_PARSERS = {
     color: 'rose',
     parse(raw) {
       return raw.trim().split('\n').reverse().map((line, i) => {
-        // [2026-03-22 19:09:40] tesco: found 0 cards
         const m = line.match(/^\[(.+?)\]\s+(\S+?):\s+(.+)$/);
         if (!m) return null;
-        return { id: i, datetime: m[1], site: m[2].replace(':',''), desc: m[3] };
+        return { id: i, datetime: m[1], site: m[2].replace(':',''), desc: m[3], _raw: line };
       }).filter(Boolean);
     },
     columns: [
-      { key: 'datetime', label: 'Date / Time', render: r => dtCell(r.datetime) },
-      { key: 'site',     label: 'Site',        render: r => `<span class="badge badge-site">${esc(r.site)}</span>` },
-      { key: 'desc',     label: 'Result',      render: r => {
+      { key: 'datetime', label: 'Date / Time', render: (r,q,cf) => dtCell(r.datetime, q||cf.datetime) },
+      { key: 'site',     label: 'Site',        render: (r,q,cf) => `<span class="badge badge-site">${highlight(esc(r.site), q||cf.site)}</span>` },
+      { key: 'desc',     label: 'Result',      render: (r,q,cf) => {
         const isError = r.desc.toLowerCase().includes('not loaded') || r.desc.toLowerCase().includes('error');
-        return isError
-          ? `<span class="badge badge-error">${esc(r.desc)}</span>`
-          : esc(r.desc);
+        const txt = highlight(esc(r.desc), q||cf.desc);
+        return isError ? `<span class="badge badge-error">${txt}</span>` : txt;
       }},
     ],
+    expandFields: r => [
+      { label: 'Date / Time', value: r.datetime },
+      { label: 'Site',        value: r.site },
+      { label: 'Result',      value: r.desc },
+    ],
     rowClass: () => '',
+    errorCount: rows => rows.filter(r => r.desc.toLowerCase().includes('not loaded') || r.desc.toLowerCase().includes('error')).length,
   },
 
   'keyword_debug.log': {
@@ -521,21 +672,27 @@ const FILE_PARSERS = {
     color: 'sky',
     parse(raw) {
       return raw.trim().split('\n').reverse().map((line, i) => {
-        // [datetime] url: keyword MATCHED/NOT matched -> word
         const m = line.match(/^\[(.+?)\]\s+(https?:\/\/\S+):\s+keyword\s+(MATCHED|NOT matched)\s+->\s+(.+)$/i);
         if (!m) return null;
-        return { id: i, datetime: m[1], url: m[2], status: m[3].toUpperCase(), keyword: m[4].trim() };
+        return { id: i, datetime: m[1], url: m[2], status: m[3].toUpperCase(), keyword: m[4].trim(), _raw: line };
       }).filter(Boolean);
     },
     columns: [
-      { key: 'datetime', label: 'Date / Time', render: r => dtCell(r.datetime) },
-      { key: 'url',      label: 'URL',         render: r => `<span class="td-url" title="${esc(r.url)}">${esc(shortUrl(r.url))}</span>` },
-      { key: 'keyword',  label: 'Keyword',     render: r => `<strong>${esc(r.keyword)}</strong>` },
-      { key: 'status',   label: 'Status',      render: r => r.status === 'MATCHED'
-          ? `<span class="badge badge-matched">✓ Matched</span>`
-          : `<span class="badge badge-notmatched">✗ Not matched</span>` },
+      { key: 'datetime', label: 'Date / Time', render: (r,q,cf) => dtCell(r.datetime, q||cf.datetime) },
+      { key: 'url',      label: 'URL',         render: (r,q,cf) => `<span class="td-url" title="${esc(r.url)}">${highlight(esc(shortUrl(r.url)), q||cf.url)}</span>` },
+      { key: 'keyword',  label: 'Keyword',     render: (r,q,cf) => `<strong>${highlight(esc(r.keyword), q||cf.keyword)}</strong>` },
+      { key: 'status',   label: 'Status',      render: (r,q,cf) => r.status === 'MATCHED'
+          ? `<span class="badge badge-matched">✓ ${highlight('Matched', q||cf.status)}</span>`
+          : `<span class="badge badge-notmatched">✗ ${highlight('Not matched', q||cf.status)}</span>` },
+    ],
+    expandFields: r => [
+      { label: 'Date / Time', value: r.datetime },
+      { label: 'Full URL',    value: r.url },
+      { label: 'Keyword',     value: r.keyword },
+      { label: 'Status',      value: r.status },
     ],
     rowClass: () => '',
+    errorCount: () => 0,
   },
 
   'price_debug.log': {
@@ -543,7 +700,6 @@ const FILE_PARSERS = {
     color: 'mint',
     parse(raw) {
       return raw.trim().split('\n').reverse().map((line, i) => {
-        // [datetime] url: fetched price=X, last=Y, target=Z
         const m = line.match(/^\[(.+?)\]\s+(https?:\/\/\S+):\s+fetched price=([\d.]+),\s*last=([\d.]+),\s*target=([\d.]+)/);
         if (!m) return null;
         return {
@@ -553,22 +709,32 @@ const FILE_PARSERS = {
           fetched: parseFloat(m[3]),
           last:    parseFloat(m[4]),
           target:  parseFloat(m[5]),
+          _raw: line,
         };
       }).filter(Boolean);
     },
     columns: [
-      { key: 'datetime', label: 'Date / Time', render: r => dtCell(r.datetime) },
-      { key: 'url',      label: 'Item',        render: r => `<span class="td-url" title="${esc(r.url)}">${esc(productName(r.url))}</span>` },
-      { key: 'fetched',  label: 'Fetched',     render: r => `<span class="price-val">£${r.fetched.toFixed(2)}</span>` },
-      { key: 'target',   label: 'Target',      render: r => `<span class="price-target">£${r.target.toFixed(2)}</span>` },
-      { key: 'diff',     label: 'vs Target',   render: r => {
+      { key: 'datetime', label: 'Date / Time', render: (r,q,cf) => dtCell(r.datetime, q||cf.datetime) },
+      { key: 'url',      label: 'Item',        render: (r,q,cf) => `<span class="td-url" title="${esc(r.url)}">${highlight(esc(productName(r.url)), q||cf.url)}</span>` },
+      { key: 'fetched',  label: 'Fetched',     render: (r,q,cf) => `<span class="price-val">${highlight('£'+r.fetched.toFixed(2), q||cf.fetched)}</span>` },
+      { key: 'target',   label: 'Target',      render: (r,q,cf) => `<span class="price-target">${highlight('£'+r.target.toFixed(2), q||cf.target)}</span>` },
+      { key: 'diff',     label: 'vs Target',   render: (r) => {
         const diff = r.fetched - r.target;
         const sign = diff >= 0 ? '+' : '';
         const cls  = diff < 0 ? 'color:var(--green-alert-text)' : 'color:var(--text-muted)';
         return `<span style="${cls};font-weight:500">${sign}£${Math.abs(diff).toFixed(2)}</span>`;
       }},
     ],
+    expandFields: r => [
+      { label: 'Date / Time',  value: r.datetime },
+      { label: 'Full URL',     value: r.url },
+      { label: 'Fetched',      value: '£' + r.fetched.toFixed(2) },
+      { label: 'Last',         value: '£' + r.last.toFixed(2) },
+      { label: 'Target',       value: '£' + r.target.toFixed(2) },
+      { label: 'vs Target',    value: (r.fetched < r.target ? '▼ Below target' : '▲ Above target') },
+    ],
     rowClass: r => r.fetched < r.target ? 'row-deal' : '',
+    errorCount: () => 0,
   },
 };
 
@@ -576,11 +742,19 @@ const FILE_PARSERS = {
 //  STATE
 // ══════════════════════════════════════════════
 let state = {
-  files:       [],   // [{name, sha}]
-  activeFile:  null,
-  rows:        [],   // parsed rows for active file
-  page:        1,
-  pageSize:    20,
+  files:        [],
+  activeFile:   null,
+  rows:         [],       // all parsed rows
+  filteredRows: [],       // after global + column filters
+  page:         1,
+  pageSize:     20,
+  globalQuery:  '',
+  colFilters:   {},       // { colKey: string }
+  expandedRow:  null,     // row id currently expanded
+  lastFetched:  null,
+  refreshTimer: null,
+  countdownTimer: null,
+  countdownSecs:  0,
 };
 
 // ══════════════════════════════════════════════
@@ -593,6 +767,7 @@ window.addEventListener('DOMContentLoaded', () => {
   } else {
     document.getElementById('viewer').style.display = 'block';
     loadFileList();
+    startAutoRefresh();
   }
 });
 
@@ -605,6 +780,42 @@ function saveConfig() {
   document.getElementById('setupCard').style.display = 'none';
   document.getElementById('viewer').style.display = 'block';
   loadFileList();
+  startAutoRefresh();
+}
+
+// ══════════════════════════════════════════════
+//  AUTO-REFRESH
+// ══════════════════════════════════════════════
+function startAutoRefresh() {
+  if (state.refreshTimer) clearInterval(state.refreshTimer);
+  if (state.countdownTimer) clearInterval(state.countdownTimer);
+
+  state.refreshTimer = setInterval(() => {
+    if (state.activeFile) loadFile(state.activeFile);
+  }, AUTO_REFRESH_MS);
+
+  startCountdown();
+}
+
+function startCountdown() {
+  if (state.countdownTimer) clearInterval(state.countdownTimer);
+  state.countdownSecs = AUTO_REFRESH_MS / 1000;
+  updateCountdownDisplay();
+  state.countdownTimer = setInterval(() => {
+    state.countdownSecs--;
+    if (state.countdownSecs <= 0) {
+      state.countdownSecs = AUTO_REFRESH_MS / 1000;
+    }
+    updateCountdownDisplay();
+  }, 1000);
+}
+
+function updateCountdownDisplay() {
+  const el = document.getElementById('refreshCountdown');
+  if (!el) return;
+  const m = Math.floor(state.countdownSecs / 60);
+  const s = state.countdownSecs % 60;
+  el.textContent = `↺ ${m}:${String(s).padStart(2,'0')}`;
 }
 
 // ══════════════════════════════════════════════
@@ -629,7 +840,6 @@ async function loadFileList() {
   hideError();
   try {
     const items = await ghFetch(`/repos/${CONFIG.owner}/${CONFIG.repo}/contents/?ref=${CONFIG.branch}`);
-    // Keep only .log files that have a known parser
     state.files = items
       .filter(f => f.type === 'file' && FILE_PARSERS[f.name])
       .map(f => ({ name: f.name, sha: f.sha }));
@@ -658,9 +868,13 @@ async function loadFile(name) {
     const raw = atob(data.content.replace(/\n/g, ''));
     const parser = FILE_PARSERS[name];
     state.rows = parser.parse(raw);
-    state.page = 1;
+    state.lastFetched = new Date();
+    state.expandedRow = null;
+    applyFilters();
     renderTable();
+    updateLastUpdated();
     setStatus('ok', 'loaded');
+    startCountdown();
   } catch (err) {
     showError(err.message);
     setStatus('error', 'error');
@@ -673,19 +887,97 @@ async function loadFile(name) {
 }
 
 // ══════════════════════════════════════════════
+//  FILTERING
+// ══════════════════════════════════════════════
+function applyFilters() {
+  const gq = state.globalQuery.toLowerCase().trim();
+  const cf = state.colFilters;
+
+  state.filteredRows = state.rows.filter(r => {
+    // Global search — check raw line
+    if (gq && !r._raw.toLowerCase().includes(gq)) return false;
+
+    // Per-column filters
+    const parser = FILE_PARSERS[state.activeFile];
+    for (const col of parser.columns) {
+      const fv = (cf[col.key] || '').toLowerCase().trim();
+      if (!fv) continue;
+      // Get a plain-text version of this field for matching
+      const fieldVal = getFieldText(r, col.key).toLowerCase();
+      if (!fieldVal.includes(fv)) return false;
+    }
+    return true;
+  });
+
+  state.page = 1;
+}
+
+function getFieldText(r, key) {
+  // Returns plain text for a field key — used for filtering
+  switch(key) {
+    case 'datetime': return r.datetime || '';
+    case 'site':     return r.site || '';
+    case 'desc':     return r.desc || '';
+    case 'url':      return (r.url || '') + ' ' + productName(r.url || '');
+    case 'keyword':  return r.keyword || '';
+    case 'status':   return r.status || '';
+    case 'fetched':  return r.fetched !== undefined ? '£'+r.fetched.toFixed(2) : '';
+    case 'target':   return r.target  !== undefined ? '£'+r.target.toFixed(2)  : '';
+    case 'diff':     return r.fetched !== undefined ? String(r.fetched - r.target) : '';
+    default:         return '';
+  }
+}
+
+function onGlobalSearch() {
+  state.globalQuery = document.getElementById('globalSearch').value;
+  applyFilters();
+  renderTable();
+}
+
+function onColFilter(key, value) {
+  state.colFilters[key] = value;
+  // Style the input
+  const inp = document.getElementById('cf-' + key);
+  if (inp) inp.classList.toggle('has-value', value.trim().length > 0);
+  applyFilters();
+  renderTable();
+}
+
+function clearAllFilters() {
+  state.globalQuery = '';
+  state.colFilters = {};
+  document.getElementById('globalSearch').value = '';
+  document.querySelectorAll('.col-filter-input').forEach(i => {
+    i.value = '';
+    i.classList.remove('has-value');
+  });
+  applyFilters();
+  renderTable();
+}
+
+// ══════════════════════════════════════════════
 //  RENDER
 // ══════════════════════════════════════════════
 function renderTabs() {
-  const el = document.getElementById('tabs');
-  el.innerHTML = state.files.map(f => {
+  const tabsEl = document.getElementById('tabs');
+  const lu = document.getElementById('lastUpdated');
+
+  const tabsHtml = state.files.map(f => {
     const parser = FILE_PARSERS[f.name];
     return `<button class="tab" id="tab-${f.name}" onclick="selectFile('${f.name}')">${parser.label}</button>`;
   }).join('');
+
+  tabsEl.innerHTML = tabsHtml;
+  tabsEl.appendChild(lu);
 }
 
 function selectFile(name) {
   state.activeFile = name;
-  // Update tab active states
+  state.colFilters = {};
+  state.globalQuery = '';
+  state.expandedRow = null;
+  document.getElementById('globalSearch').value = '';
+
   state.files.forEach(f => {
     const el = document.getElementById(`tab-${f.name}`);
     if (el) el.classList.toggle('active', f.name === name);
@@ -694,42 +986,105 @@ function selectFile(name) {
 }
 
 function renderTable() {
-  const parser = FILE_PARSERS[state.activeFile];
-  const rows   = state.rows;
-  const total  = rows.length;
-  const ps     = state.pageSize;
-  const page   = state.page;
-  const start  = (page - 1) * ps;
-  const end    = Math.min(start + ps, total);
-  const slice  = rows.slice(start, end);
+  const parser   = FILE_PARSERS[state.activeFile];
+  const rows     = state.filteredRows;
+  const allRows  = state.rows;
+  const total    = rows.length;
+  const ps       = state.pageSize;
+  const page     = state.page;
+  const start    = (page - 1) * ps;
+  const end      = Math.min(start + ps, total);
+  const slice    = rows.slice(start, end);
+  const gq       = state.globalQuery;
+  const cf       = state.colFilters;
+  const isFiltered = gq.trim() || Object.values(cf).some(v => v.trim());
 
-  // Update tab count
+  // Update tab: count + error badge
   const tabEl = document.getElementById(`tab-${state.activeFile}`);
   if (tabEl) {
-    tabEl.innerHTML = `${parser.label} <span class="tab-count">${total}</span>`;
+    const errCount = parser.errorCount(allRows);
+    const errBadge = errCount > 0 ? `<span class="tab-errors">${errCount} err</span>` : '';
+    tabEl.innerHTML = `${parser.label} <span class="tab-count">${isFiltered ? total+'/'+allRows.length : total}</span>${errBadge}`;
   }
 
   // Toolbar info
+  const filterNote = isFiltered
+    ? ` <span class="filter-active">(filtered from ${allRows.length}) <a href="#" onclick="clearAllFilters();return false;" style="color:var(--rose-deep);text-decoration:none">✕ clear</a></span>`
+    : '';
   document.getElementById('toolbarInfo').innerHTML =
-    `Showing <strong>${start+1}–${end}</strong> of <strong>${total}</strong> entries`;
+    total === 0
+      ? `<span>No entries match your filter</span>${filterNote}`
+      : `Showing <strong>${start+1}–${end}</strong> of <strong>${total}</strong>${filterNote}`;
 
-  // Table
-  const thead = parser.columns.map(c => `<th>${c.label}</th>`).join('');
-  const tbody = slice.length === 0
-    ? `<tr><td colspan="${parser.columns.length}"><div class="state-msg"><div class="icon">📭</div><p>No entries found.</p></div></td></tr>`
-    : slice.map(r => {
-        const cls = parser.rowClass(r);
-        const cells = parser.columns.map(c => `<td>${c.render(r)}</td>`).join('');
-        return `<tr class="${cls}">${cells}</tr>`;
-      }).join('');
+  // Column filter inputs row
+  const filterRow = `<tr class="col-filters">${
+    parser.columns.map(c =>
+      `<td class="col-filter-cell">
+        <input class="col-filter-input${(cf[c.key]||'').trim() ? ' has-value' : ''}"
+          id="cf-${c.key}"
+          type="text"
+          placeholder="${c.label}…"
+          value="${esc(cf[c.key]||'')}"
+          oninput="onColFilter('${c.key}', this.value)"
+          autocomplete="off"/>
+      </td>`
+    ).join('')
+  }</tr>`;
 
-  document.getElementById('tableWrap').innerHTML = `
-    <table>
-      <thead><tr>${thead}</tr></thead>
-      <tbody>${tbody}</tbody>
-    </table>`;
+  // Table header
+  const thead = `
+    <thead>
+      <tr class="col-headers">${parser.columns.map(c => `<th>${c.label}</th>`).join('')}</tr>
+      ${filterRow}
+    </thead>`;
+
+  // Rows
+  let tbody = '';
+  if (slice.length === 0) {
+    tbody = `<tr><td colspan="${parser.columns.length}">
+      <div class="state-msg"><div class="icon">🔍</div><p>No entries match your search.</p></div>
+    </td></tr>`;
+  } else {
+    slice.forEach(r => {
+      const cls = parser.rowClass(r);
+      const isExp = state.expandedRow === r.id;
+      const cells = parser.columns.map(c => `<td>${c.render(r, gq, cf)}</td>`).join('');
+      tbody += `<tr class="${cls}${isExp?' expanded':''}" onclick="toggleExpand(${r.id})">${cells}</tr>`;
+
+      if (isExp) {
+        const fields = parser.expandFields(r);
+        const fieldsHtml = fields.map(f =>
+          `<div class="expand-field">
+            <span class="expand-label">${esc(f.label)}</span>
+            <span class="expand-value">${esc(f.value)}</span>
+          </div>`
+        ).join('');
+        tbody += `<tr class="expand-row"><td colspan="${parser.columns.length}">
+          <div class="expand-content">${fieldsHtml}</div>
+        </td></tr>`;
+      }
+    });
+  }
+
+  document.getElementById('tableWrap').innerHTML =
+    `<table>${thead}<tbody>${tbody}</tbody></table>`;
 
   renderPagination(total, ps, page);
+}
+
+function toggleExpand(id) {
+  state.expandedRow = state.expandedRow === id ? null : id;
+  renderTable();
+}
+
+function updateLastUpdated() {
+  const el = document.getElementById('lastUpdated');
+  if (!el || !state.lastFetched) return;
+  const t = state.lastFetched;
+  const hh = String(t.getHours()).padStart(2,'0');
+  const mm = String(t.getMinutes()).padStart(2,'0');
+  const ss = String(t.getSeconds()).padStart(2,'0');
+  el.textContent = `Updated ${hh}:${mm}:${ss}`;
 }
 
 function renderPagination(total, ps, current) {
@@ -737,7 +1092,6 @@ function renderPagination(total, ps, current) {
   if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
 
   let html = `<button class="pg-btn" onclick="goPage(${current-1})" ${current===1?'disabled':''}>‹</button>`;
-
   const range = pageRange(current, pages);
   let prev = null;
   range.forEach(p => {
@@ -745,7 +1099,6 @@ function renderPagination(total, ps, current) {
     html += `<button class="pg-btn ${p===current?'active':''}" onclick="goPage(${p})">${p}</button>`;
     prev = p;
   });
-
   html += `<button class="pg-btn" onclick="goPage(${current+1})" ${current===pages?'disabled':''}>›</button>`;
   document.getElementById('pagination').innerHTML = html;
 }
@@ -760,22 +1113,52 @@ function pageRange(current, total) {
 function renderSkeleton() {
   const parser = FILE_PARSERS[state.activeFile];
   if (!parser) return;
-  const thead = parser.columns.map(c => `<th>${c.label}</th>`).join('');
+  const thead = `<thead><tr class="col-headers">${parser.columns.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead>`;
   const rows  = Array(8).fill(0).map(() =>
-    `<tr class="skeleton">${parser.columns.map(() => '<td>████████</td>').join('')}</tr>`
+    `<tr class="skeleton">${parser.columns.map(()=>'<td>████████</td>').join('')}</tr>`
   ).join('');
-  document.getElementById('tableWrap').innerHTML = `
-    <table><thead><tr>${thead}</tr></thead><tbody>${rows}</tbody></table>`;
+  document.getElementById('tableWrap').innerHTML =
+    `<table>${thead}<tbody>${rows}</tbody></table>`;
   document.getElementById('pagination').innerHTML = '';
+}
+
+// ══════════════════════════════════════════════
+//  CSV EXPORT
+// ══════════════════════════════════════════════
+function exportCSV() {
+  const parser = FILE_PARSERS[state.activeFile];
+  if (!parser || state.filteredRows.length === 0) return;
+
+  const headers = parser.columns.map(c => csvCell(c.label));
+  const rowsData = state.filteredRows.map(r =>
+    parser.columns.map(c => csvCell(getFieldText(r, c.key)))
+  );
+
+  const csv = [headers, ...rowsData].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${state.activeFile.replace('.log','')}_export.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function csvCell(val) {
+  const s = String(val ?? '');
+  return s.includes(',') || s.includes('"') || s.includes('\n')
+    ? `"${s.replace(/"/g, '""')}"`
+    : s;
 }
 
 // ══════════════════════════════════════════════
 //  EVENTS
 // ══════════════════════════════════════════════
 function goPage(p) {
-  const pages = Math.ceil(state.rows.length / state.pageSize);
+  const pages = Math.ceil(state.filteredRows.length / state.pageSize);
   if (p < 1 || p > pages) return;
   state.page = p;
+  state.expandedRow = null;
   renderTable();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -787,15 +1170,27 @@ function onPageSizeChange() {
 }
 
 function refreshCurrent() {
-  if (state.activeFile) loadFile(state.activeFile);
+  if (state.activeFile) {
+    loadFile(state.activeFile);
+    startCountdown();
+  }
 }
 
 // ══════════════════════════════════════════════
 //  HELPERS
 // ══════════════════════════════════════════════
-function dtCell(dt) {
+function highlight(text, query) {
+  if (!query || !query.trim()) return text;
+  const q = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(`(${q})`, 'gi'), '<mark>$1</mark>');
+}
+
+function dtCell(dt, query) {
   const [date, time] = dt.split(' ');
-  return `<span class="td-datetime"><span class="td-date">${esc(date)}</span><span class="td-time">${esc(time||'')}</span></span>`;
+  return `<span class="td-datetime">
+    <span class="td-date">${highlight(esc(date), query)}</span>
+    <span class="td-time">${highlight(esc(time||''), query)}</span>
+  </span>`;
 }
 
 function shortUrl(url) {
@@ -806,12 +1201,10 @@ function shortUrl(url) {
 }
 
 function productName(url) {
-  // Extract readable product name from IKEA-style URLs
   try {
     const u = new URL(url);
     const parts = u.pathname.split('/').filter(Boolean);
     const slug = parts[parts.length - 1] || parts[parts.length - 2] || '';
-    // Remove product ID suffix (e.g. -90624640)
     return slug.replace(/-[a-z0-9]{8,}$/, '').replace(/-/g, ' ') || shortUrl(url);
   } catch { return shortUrl(url); }
 }
@@ -839,7 +1232,6 @@ function hideError() {
 }
 </script>
 
-<!-- PWA Service Worker registration -->
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
