@@ -1,8 +1,9 @@
-const CACHE = 'autologreader-v2';
+const CACHE = 'autologreader-v3';
+const BASE = '/tel-auto-reading';   // ← your repo name exactly as it appears in the URL
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/manifest.json',
 ];
 
 self.addEventListener('install', e => {
@@ -34,7 +35,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
           return res;
         })
-        .catch(() => caches.match(e.request))  // fallback to cache if offline
+        .catch(() => caches.match(e.request))
     );
   } else {
     // Cache-first for JS, CSS, fonts etc
