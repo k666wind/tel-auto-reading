@@ -588,10 +588,9 @@ let state = {
 // ══════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
   if (CONFIG.token === '__GH_TOKEN__' || !CONFIG.token) {
-    // Secrets not injected — show login as fallback
     document.getElementById('setupCard').style.display = 'block';
   } else {
-    // Secrets injected by Actions — go straight to viewer
+    document.getElementById('viewer').style.display = 'block';  // ← add this line
     loadFileList();
   }
 });
