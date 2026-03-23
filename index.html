@@ -587,10 +587,11 @@ let state = {
 //  BOOT
 // ══════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  if (CONFIG.token === '__GH_TOKEN__' || !CONFIG.token) {
+  const tokenInjected = CONFIG.token && CONFIG.token.startsWith('ghp_');
+  if (!tokenInjected) {
     document.getElementById('setupCard').style.display = 'block';
   } else {
-    document.getElementById('viewer').style.display = 'block';  // ← add this line
+    document.getElementById('viewer').style.display = 'block';
     loadFileList();
   }
 });
