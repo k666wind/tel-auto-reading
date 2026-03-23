@@ -479,10 +479,10 @@
 //  CONFIG — edit these two values
 // ══════════════════════════════════════════════
 const CONFIG = {
-  owner:  'YOUR_GITHUB_USERNAME',   // ← replace
+  owner:  '__GH_OWNER__',
   repo:   'tel-auto',
   branch: 'main',
-  token:  'YOUR_PAT_TOKEN',         // ← replace (ghp_...)
+  token:  '__GH_TOKEN__',
 };
 
 // ══════════════════════════════════════════════
@@ -587,15 +587,13 @@ let state = {
 //  BOOT
 // ══════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  // If config is already filled (hardcoded), skip setup card
-  if (CONFIG.token && CONFIG.token !== 'YOUR_PAT_TOKEN' && CONFIG.owner !== 'YOUR_GITHUB_USERNAME') {
+  // Placeholders mean the Actions workflow hasn't injected secrets yet
+  if (CONFIG.token && CONFIG.token !== '__GH_TOKEN__') {
     document.getElementById('setupCard').style.display = 'none';
     document.getElementById('viewer').style.display = 'block';
     loadFileList();
-  } else {
-    // Show setup card with pre-filled owner
-    document.getElementById('cfgOwner').value = CONFIG.owner !== 'YOUR_GITHUB_USERNAME' ? CONFIG.owner : '';
   }
+  // else: login card stays visible as fallback
 });
 
 function saveConfig() {
