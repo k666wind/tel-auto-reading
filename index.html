@@ -352,9 +352,15 @@
       background: rgba(255,252,254,0.82);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      overflow: hidden;
+      overflow-x: auto;   /* horizontal scroll on mobile */
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
       box-shadow: 0 2px 20px var(--shadow);
       animation: fadeUp 0.3s ease;
+    }
+
+    .log-table-wrap table {
+      min-width: 480px;   /* prevents columns collapsing too narrow */
     }
 
     @keyframes fadeUp {
@@ -973,10 +979,9 @@ function renderTabs() {
 
 function selectFile(name) {
   state.activeFile = name;
-  state.colFilters = {};
-  state.globalQuery = '';
+  state.colFilters = {};   // reset column filters per-file (they are file-specific)
   state.expandedRow = null;
-  document.getElementById('globalSearch').value = '';
+  // global search intentionally preserved across file switches
 
   state.files.forEach(f => {
     const el = document.getElementById(`tab-${f.name}`);
@@ -1025,7 +1030,8 @@ function renderTable() {
           type="text"
           placeholder="${c.label}…"
           value="${esc(cf[c.key]||'')}"
-          oninput="onColFilter('${c.key}', this.value)"
+          data-colkey="${c.key}"
+          onkeydown="event.stopPropagation()"
           autocomplete="off"/>
       </td>`
     ).join('')
@@ -1069,7 +1075,35 @@ function renderTable() {
   document.getElementById('tableWrap').innerHTML =
     `<table>${thead}<tbody>${tbody}</tbody></table>`;
 
+  // Attach column filter listeners without losing focus on re-render
+  attachColFilterListeners();
   renderPagination(total, ps, page);
+}
+
+function attachColFilterListeners() {
+  const active = document.activeElement;
+  const activeKey = active && active.dataset && active.dataset.colkey;
+
+  document.querySelectorAll('.col-filter-input').forEach(inp => {
+    inp.addEventListener('input', function() {
+      // Save cursor position before re-render
+      const key = this.dataset.colkey;
+      const pos = this.selectionStart;
+      onColFilter(key, this.value);
+      // Re-focus and restore cursor after re-render
+      const restored = document.getElementById('cf-' + key);
+      if (restored) {
+        restored.focus();
+        try { restored.setSelectionRange(pos, pos); } catch(e) {}
+      }
+    });
+  });
+
+  // Restore focus if it was on a filter input before re-render
+  if (activeKey) {
+    const el = document.getElementById('cf-' + activeKey);
+    if (el) el.focus();
+  }
 }
 
 function toggleExpand(id) {
