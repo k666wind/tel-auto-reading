@@ -650,27 +650,86 @@ const FILE_PARSERS = {
     color: 'rose',
     parse(raw) {
       return raw.trim().split('\n').reverse().map((line, i) => {
-        const m = line.match(/^\[(.+?)\]\s+(\S+?):\s+(.+)$/);
-        if (!m) return null;
-        return { id: i, datetime: m[1], site: m[2].replace(':',''), desc: m[3], _raw: line };
+        // Format A: [datetime] site: Title, Price=X, Discount=Y, Target=Z[, Alert Sent]
+        const mFull = line.match(/^\[(.+?)\]\s+(\S+?):\s+(.+?),\s*Price=([\d.]+),\s*Discount=([\d.]+),\s*Target=([\d.]+)(,\s*Alert Sent)?\s*$/i);
+        if (mFull) {
+          return {
+            id: i,
+            datetime:  mFull[1],
+            site:      mFull[2].replace(':','').trim(),
+            desc:      mFull[3].trim(),
+            price:     parseFloat(mFull[4]),
+            discount:  parseFloat(mFull[5]),
+            target:    parseFloat(mFull[6]),
+            alerted:   !!mFull[7],
+            type:      'card',
+            _raw: line,
+          };
+        }
+        // Format B: [datetime] site: simple message (e.g. "not found", "found N cards")
+        const mSimple = line.match(/^\[(.+?)\]\s+(\S+?):\s+(.+)$/);
+        if (mSimple) {
+          return {
+            id: i,
+            datetime: mSimple[1],
+            site:     mSimple[2].replace(':','').trim(),
+            desc:     mSimple[3].trim(),
+            price:    null,
+            discount: null,
+            target:   null,
+            alerted:  false,
+            type:     'simple',
+            _raw: line,
+          };
+        }
+        return null;
       }).filter(Boolean);
     },
     columns: [
       { key: 'datetime', label: 'Date / Time', render: (r,q,cf) => dtCell(r.datetime, q||cf.datetime) },
       { key: 'site',     label: 'Site',        render: (r,q,cf) => `<span class="badge badge-site">${highlight(esc(r.site), q||cf.site)}</span>` },
       { key: 'desc',     label: 'Result',      render: (r,q,cf) => {
-        const isError = r.desc.toLowerCase().includes('not loaded') || r.desc.toLowerCase().includes('error');
+        const isNotFound = r.type === 'simple';
         const txt = highlight(esc(r.desc), q||cf.desc);
-        return isError ? `<span class="badge badge-error">${txt}</span>` : txt;
+        if (isNotFound) return `<span class="badge badge-error">${txt}</span>`;
+        if (r.alerted)  return `<span style="font-weight:500">${txt}</span>`;
+        return txt;
+      }},
+      { key: 'price',    label: 'Price',       render: (r,q,cf) => {
+        if (r.price === null) return '<span style="color:var(--text-light)">—</span>';
+        return `<span class="price-val">${highlight('£'+r.price.toFixed(2), q||cf.price)}</span>`;
+      }},
+      { key: 'discount', label: 'Discount',    render: (r,q,cf) => {
+        if (r.discount === null) return '<span style="color:var(--text-light)">—</span>';
+        return highlight(r.discount + '%', q||cf.discount);
+      }},
+      { key: 'target',   label: 'Target',      render: (r,q,cf) => {
+        if (r.target === null) return '<span style="color:var(--text-light)">—</span>';
+        return `<span class="price-target">${highlight(r.target + '%', q||cf.target)}</span>`;
+      }},
+      { key: 'alerted',  label: 'Alert',       render: (r) => {
+        if (r.type === 'simple') return '';
+        return r.alerted
+          ? `<span class="badge badge-matched">✓ Sent</span>`
+          : `<span style="color:var(--text-light);font-size:0.72rem">—</span>`;
       }},
     ],
-    expandFields: r => [
+    expandFields: r => r.type === 'simple' ? [
       { label: 'Date / Time', value: r.datetime },
       { label: 'Site',        value: r.site },
       { label: 'Result',      value: r.desc },
+    ] : [
+      { label: 'Date / Time', value: r.datetime },
+      { label: 'Site',        value: r.site },
+      { label: 'Item',        value: r.desc },
+      { label: 'Price',       value: '£' + r.price.toFixed(2) },
+      { label: 'Discount',    value: r.discount + '%' },
+      { label: 'Target',      value: r.target + '%' },
+      { label: 'Alert Sent',  value: r.alerted ? 'Yes' : 'No' },
     ],
-    rowClass: () => '',
-    errorCount: rows => rows.filter(r => r.desc.toLowerCase().includes('not loaded') || r.desc.toLowerCase().includes('error')).length,
+    // Highlight row when discount > target
+    rowClass: r => (r.discount !== null && r.target !== null && r.discount > r.target) ? 'row-deal' : '',
+    errorCount: rows => rows.filter(r => r.type === 'simple').length,
   },
 
   'keyword_debug.log': {
@@ -928,8 +987,13 @@ function getFieldText(r, key) {
     case 'keyword':  return r.keyword || '';
     case 'status':   return r.status || '';
     case 'fetched':  return r.fetched !== undefined ? '£'+r.fetched.toFixed(2) : '';
-    case 'target':   return r.target  !== undefined ? '£'+r.target.toFixed(2)  : '';
+    case 'target':   return r.target  !== undefined
+                       ? (r.price !== undefined ? r.target+'%' : '£'+r.target.toFixed(2))
+                       : '';
     case 'diff':     return r.fetched !== undefined ? String(r.fetched - r.target) : '';
+    case 'price':    return r.price    !== null && r.price    !== undefined ? '£'+r.price.toFixed(2) : '';
+    case 'discount': return r.discount !== null && r.discount !== undefined ? r.discount+'%' : '';
+    case 'alerted':  return r.alerted ? 'sent' : '';
     default:         return '';
   }
 }
