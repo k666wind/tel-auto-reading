@@ -930,7 +930,10 @@ async function loadFile(name) {
   renderSkeleton();
   try {
     const data = await ghFetch(`/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${name}?ref=${CONFIG.branch}`);
-    const raw = atob(data.content.replace(/\n/g, ''));
+    // FIXED — correctly decodes UTF-8 bytes
+    const raw = new TextDecoder('utf-8').decode(
+      Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0))
+    );
     const parser = FILE_PARSERS[name];
     state.rows = parser.parse(raw);
     state.lastFetched = new Date();
